@@ -22,37 +22,29 @@ class Ca:
 
 class DynamicPlotter(Gtk.Window):
 
-    def __init__(self, sampleinterval=0.1, timewindow=10., size=(780,580)):
-        Gtk.Window.__init__(self, title='Dynamic Plotting with CaGraph-1.2-gtk3')
-        self._size = size
-        self._interval = int(sampleinterval*1000)
+    def __init__(self, sampleinterval=0.1, timewindow=10., size=(600,350)):
         # Gtk stuff
+        Gtk.Window.__init__(self, title='Dynamic Plotting with CaGraph-1.2-gtk3')
         self.connect("destroy", lambda x : Gtk.main_quit())
         self.set_default_size(*size)
-
         # Data stuff
+        self._interval = int(sampleinterval*1000)
         self._bufsize = int(timewindow/sampleinterval)
         self.databuffer = collections.deque([0.0]*self._bufsize, self._bufsize)
-        self.timetics = [sampleinterval*i for i in range(-self._bufsize,1)]
-
+        self.x = [sampleinterval*i for i in range(-self._bufsize,1)]
         # CaGraph stuff
         self.graph = Ca.Graph()
-        self.xaxis, self.yaxis = (Ca.GraphXAxis(self.graph),
-                                  Ca.GraphYAxis(self.graph))
-        self.xaxis.min=self.timetics[0]
-        self.xaxis.max=self.timetics[-1]
-        
+        self.xaxis, self.yaxis = (Ca.GraphXAxis(self.graph), Ca.GraphYAxis(self.graph))
+        self.xaxis.min=self.x[0]
+        self.xaxis.max=self.x[-1]
         self.graph.axiss.append(self.xaxis)
         self.graph.axiss.append(self.yaxis)
-        self.graph.graph_style.width = self._size[0]
-        self.graph.graph_style.height = self._size[1]
+        self.graph.graph_style.width = size[0]
+        self.graph.graph_style.height = size[1]
         series = Ca.GraphSeriesLine(self.graph, 0, 1)
         self.graph.seriess.append(series)
-
         self.graph.grid = Ca.GraphGrid(self.graph, 0, 1)
-
-        self.updateplot()
-        
+        # Gtk stuff
         self.add(self.graph)
         self.graph.show()
         self.show_all()
@@ -65,7 +57,7 @@ class DynamicPlotter(Gtk.Window):
 
     def updateplot(self):
         self.databuffer.append( self.getdata() )
-        self.graph.seriess[0].data = list(zip(self.timetics, self.databuffer))
+        self.graph.seriess[0].data = list(zip(self.x, self.databuffer))
         self.graph.auto_set_yrange(1)
         self.graph.queue_draw()
         return True
